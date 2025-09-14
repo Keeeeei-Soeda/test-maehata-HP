@@ -1,0 +1,276 @@
+<div class="p-lawyer_slider" aria-label="実績スライダー">
+  <ul>
+    <!-- 実スライド（5枚の例） -->
+    <li><img src="image_folder/image07.png" alt="実績1" loading="lazy" decoding="async"></li>
+    <li><img src="image_folder/image06.png" alt="実績2" loading="lazy" decoding="async"></li>
+    <li><img src="image_folder/image05.png" alt="実績3" loading="lazy" decoding="async"></li>
+    <li><img src="image_folder/image07.png" alt="実績4" loading="lazy" decoding="async"></li>
+    <li><img src="image_folder/image06.png" alt="実績5" loading="lazy" decoding="async"></li>
+
+    <!-- 先頭のクローン（シームレスループ用） -->
+    <li aria-hidden="true">
+      <img src="image_folder/image07.png" alt="" loading="lazy" decoding="async">
+    </li>
+  </ul>
+</div>
+
+/* =========================
+   p-lawyer_slider（横流しマルチULスライダー）
+   コンテナ直下に <ul> が2つある想定
+   ========================= */
+
+/* スライダー外枠（全幅にフルブリード） */
+.p-lawyer_slider {
+  display: flex;                    /* ulを横並びに */
+  margin: 0 calc(50% - 50vw);       /* ビューポート基準でフルブリード */
+  width: 100vw;                     /* 画面幅いっぱい */
+  height: auto;
+  overflow: hidden;                 /* はみ出し非表示 */
+}
+
+/* 各ul（スライドのグループ） */
+.p-lawyer_slider ul {
+  display: flex;                    /* liを横並びに */
+  padding: 0;
+  margin: 0;
+}
+
+/* 各スライド要素 */
+.p-lawyer_slider li {
+  width: 600px;                     /* 各アイテム幅 */
+  list-style: none;
+}
+
+/* 画像の基本スタイル */
+.p-lawyer_slider img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 1つ目のul（少し遅れて開始しているように見せる） */
+.p-lawyer_slider ul:first-child {
+  animation-name: lawSlide1;
+  animation-duration: 150s;
+  animation-delay: -75s;            /* 半分ずらす */
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* 2つ目のul（基準の流れ） */
+.p-lawyer_slider ul:last-child {
+  animation-name: lawSlide2;
+  animation-duration: 150s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* 右→左へ等速スクロール（1つ目のul） */
+@keyframes lawSlide1 {
+  0%   { transform: translateX(100%); }  /* 右端から */
+  100% { transform: translateX(-100%); } /* 左端まで */
+}
+
+/* 連続感を作る（2つ目のul） 
+   ※ ulの中身は A,B,C,A,B,C のように2巡分を入れてください */
+@keyframes lawSlide2 {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-200%); } /* 2巡分ぶん左へ */
+}
+
+/* ====== SP最適化（768px以下） ====== */
+@media screen and (max-width: 768px) {
+  .p-lawyer_slider {
+    width: 100vw;
+    height: auto !important;
+    margin: 0 auto;                 /* 余白調整 */
+    overflow: hidden;
+  }
+
+  .p-lawyer_slider ul {
+    flex-wrap: nowrap;
+  }
+
+  .p-lawyer_slider li {
+    width: 100vw;                   /* 1画面=1枚表示 */
+  }
+
+  .p-lawyer_slider img {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 50vh !important;
+    object-fit: contain !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* 補足：
+- lawSlide2 の translateX(-200%) を使う場合、各ul内は“2セット分”のアイテムを連結してください（例：A,B,C,A,B,C）。
+- 親要素が中央寄せの通常コンテンツ幅でも、marginの calc(50% - 50vw) で全幅に張り出します。
+*/
+
+Javascriptを使うスライドショー
+
+<div id="verticalwrapper1">
+  <header>
+    <div id="header">
+      
+      <!-- スライドショー（3枚） -->
+      <div class="carousel">
+			<div class="carousel-track">
+				<img src="image_folder/hero.section.image01.png" alt="slide1" class="carousel-slide">
+				<img src="image_folder/hero.section.image02.png" alt="slide2" class="carousel-slide">
+				<img src="image_folder/hero.section.image03.png" alt="slide3" class="carousel-slide">
+				<!-- クローン1枚目を一番後ろに追加（JSで自動追加でもOK） -->
+				<img src="image_folder/hero.section.image01.png" alt="slide1-clone" class="carousel-slide clone">
+			</div>
+		<!-- ドットナビ（お好みで） -->
+		<div class="carousel-dots"></div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<!-- スライドショーJavascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const track = document.querySelector('.carousel-track');
+  let slides = Array.from(track.children);
+  const dotsNav = document.querySelector('.carousel-dots');
+  const totalSlides = slides.length - 1; // クローン除く
+  let currentIndex = 0;
+  let interval;
+
+  // ドット生成
+  for(let i=0; i<totalSlides; i++) {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToSlide(i, true));
+    dotsNav.appendChild(dot);
+  }
+  const dots = Array.from(dotsNav.children);
+
+  // 初期位置
+  track.style.transform = `translateX(0)`;
+
+  // 自動スライド
+  function startAuto() {
+    interval = setInterval(() => goToSlide(currentIndex+1), 3200);
+  }
+  function stopAuto() {
+    clearInterval(interval);
+  }
+
+  function goToSlide(idx, isManual = false) {
+    // 右端クローン（ダミー）へ移動したら、すぐ1枚目にジャンプ
+    if (idx === slides.length) {
+      track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
+      track.style.transform = `translateX(-${idx * 100}%)`;
+      setTimeout(() => {
+        track.style.transition = 'none';
+        track.style.transform = `translateX(0)`;
+        currentIndex = 0;
+        updateDot();
+      }, 800); // アニメーションの長さと同じ
+    } else {
+      track.style.transition = 'transform 0.8s cubic-bezier(.77,0,.18,1)';
+      track.style.transform = `translateX(-${idx * 100}%)`;
+      currentIndex = idx;
+      updateDot();
+    }
+    if (isManual) {
+      stopAuto();
+      startAuto();
+    }
+    // 0〜(totalSlides-1)でループ
+    if (idx > totalSlides) currentIndex = 0;
+  }
+
+  function updateDot() {
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === (currentIndex % totalSlides)));
+  }
+
+  // 初期
+  startAuto();
+
+  // 最後までいったら1枚目にジャンプ
+  track.addEventListener('transitionend', () => {
+    if (currentIndex === slides.length - 1) {
+      track.style.transition = 'none';
+      track.style.transform = `translateX(0)`;
+      currentIndex = 0;
+      updateDot();
+    }
+  });
+
+  // ドットクリックで手動移動
+  dots.forEach((dot, idx) => {
+    dot.addEventListener('click', () => goToSlide(idx, true));
+  });
+});
+
+  
+</script>
+
+
+/* =========================
+   p-lawyer_slider：1枚ごとに3秒停止→次へ（JSなし）
+   5枚 + 先頭のクローン（計6枚）を想定
+
+   スライドショーの設定
+   高さが設定できてないので廃止
+   ========================= */
+
+/* 画面ごとの高さ */
+:root { --lawyer-slider-h: 480px; }              /* PC: 951px〜 */
+@media (max-width: 950px) and (min-width: 551px) {
+  :root { --lawyer-slider-h: 350px; }            /* タブレット: 551〜950 */
+}
+@media (max-width: 550px) {
+  :root { --lawyer-slider-h: 300px; }            /* スマホ: 〜550 */
+}
+
+/* 外枠：横いっぱいに広げる（フルブリード） */
+.p-lawyer_slider {
+  width: 100vw;
+  margin: 0 calc(50% - 50vw);    /* コンテンツ幅に関係なく全幅化 */
+  overflow: hidden;
+}
+
+/* トラック（= ul） */
+.p-lawyer_slider ul {
+  display: flex;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  height: var(--lawyer-slider-h);
+  /* 5ステップ：1枚=3秒停止＋0.8秒移動 → 合計 19s */
+  animation: lawyerStep5 19s linear infinite;
+  will-change: transform;
+}
+
+/* もし2本目のulが残っていたら非表示にする（旧構成の名残対策） */
+.p-lawyer_slider ul + ul { display: none; }
+
+/* 各スライド：1画面=1枚 */
+.p-lawyer_slider li {
+  min-width: 100vw;                      /* 横いっぱいを常に占有 */
+  height: var(--lawyer-slider-h);
+}
+
+/* 画像：16:9ベースで横いっぱいにトリミング表示 */
+.p-lawyer_slider img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;                      /* はみ出しは自然にトリミング */
+  object-position: center;
+  aspect-ratio: 16 / 9;                   /* 目安（絵作りに寄与） */
+}
+
+/* 「動きを減らす」ユーザー設定は尊重（任意） */
+@media (prefers-reduced-motion: reduce) {
+  .p-lawyer_slider ul { animation: none; }
+}
