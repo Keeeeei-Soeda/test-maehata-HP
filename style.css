@@ -1630,6 +1630,9 @@ footer address, #footer address {
     flex-direction: column;
     text-align: left;
     gap: 16px;
+	width: 100%;          /* ← 横幅いっぱいに */
+    max-width: 100%;      /* ← 最大幅の制限を解除 */
+    padding: 0 16px;      /* ← 必要なら余白を調整 */
   }
   .p-bengoshi-intro__photo,
   .p-bengoshi-intro__text {
